@@ -1,8 +1,8 @@
 """init database
 
-Revision ID: d67d7d3aa1a6
+Revision ID: a13d251fc56b
 Revises:
-Create Date: 2024-06-11 09:25:47.078137
+Create Date: 2024-06-13 16:19:21.045314
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "d67d7d3aa1a6"
+revision: str = "a13d251fc56b"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -25,15 +25,15 @@ def upgrade() -> None:
         "categories",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("title", sa.String(length=255), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("title"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_categories")),
+        sa.UniqueConstraint("title", name=op.f("uq_categories_title")),
     )
     op.create_table(
         "notes",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("title", sa.String(length=400), nullable=False),
         sa.Column("text", sa.Text(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_notes")),
     )
     op.create_table(
         "notes_categories",
@@ -42,12 +42,12 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["category_id"],
             ["categories.id"],
+            name=op.f("fk_notes_categories_category_id_categories"),
         ),
         sa.ForeignKeyConstraint(
-            ["note_id"],
-            ["notes.id"],
+            ["note_id"], ["notes.id"], name=op.f("fk_notes_categories_note_id_notes")
         ),
-        sa.PrimaryKeyConstraint("note_id", "category_id"),
+        sa.PrimaryKeyConstraint("note_id", "category_id", name=op.f("pk_notes_categories")),
     )
     # ### end Alembic commands ###
 
