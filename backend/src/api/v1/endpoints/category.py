@@ -1,13 +1,13 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.exceptions import HTTPException
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.dependencies import get_async_session
 from domain.schemas.notes import Category, CategoryWithID
-
 from services.category_service import CategoryService
+
+from infrastructure.database.engine import sqlalchemy_helper
 from infrastructure.repositories.category_repository import SQLAlchemyCategoryRepository
 
 router = APIRouter()
@@ -15,11 +15,13 @@ router = APIRouter()
 QueryIntID = Annotated[int, Query(ge=1, le=2147483647)]
 QueryIntLimit = Annotated[int, Query(ge=1, le=50)]
 
+Session = Annotated[AsyncSession, Depends(sqlalchemy_helper.session_getter)]
+
 
 @router.post("/create")
 async def create_caregory(
     schema: Category,
-    sesssion: Annotated[AsyncSession, Depends(get_async_session)],
+    sesssion: Session,
 ):
     repository = SQLAlchemyCategoryRepository(sesssion)
     return await CategoryService(repository).create(schema)
@@ -28,7 +30,7 @@ async def create_caregory(
 @router.put("/edit")
 async def edit_caregory(
     schema: CategoryWithID,
-    sesssion: Annotated[AsyncSession, Depends(get_async_session)],
+    sesssion: Session,
 ):
     repository = SQLAlchemyCategoryRepository(sesssion)
     return await CategoryService(repository).edit(schema)
@@ -38,17 +40,14 @@ async def edit_caregory(
 async def get_all_categories(
     limit: QueryIntLimit,
     start_id: QueryIntID,
-    sesssion: Annotated[AsyncSession, Depends(get_async_session)],
+    sesssion: Session,
 ):
     repository = SQLAlchemyCategoryRepository(sesssion)
     return await CategoryService(repository).get_all(limit, start_id)
 
 
 @router.delete("/delete")
-async def delete_caregory(
-    id: QueryIntID,
-    sesssion: Annotated[AsyncSession, Depends(get_async_session)],
-):
+async def delete_caregory(id: QueryIntID, sesssion: Session):
     repository = SQLAlchemyCategoryRepository(sesssion)
     result = await CategoryService(repository).remove(id)
     if result is None:
